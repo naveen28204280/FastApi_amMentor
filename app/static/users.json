@@ -1,0 +1,23 @@
+[
+    {
+      "name": "Teja",
+      "email": "teja@example.com",
+      "role": "mentee",
+      "year": 2,
+      "discord_id": "1234567890",
+      "github": "tejaGH"
+    },
+    {
+      "name": "Gani",
+      "email": "gani@example.com",
+      "role": "mentor",
+      "year": 4,
+      "discord_id": "999999999",
+      "github": "ganiGH"
+    },
+    {
+      "name": "Admin",
+      "email": "admin@example.com",
+      "role": "admin"
+    }
+  ]

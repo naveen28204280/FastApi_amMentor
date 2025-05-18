@@ -1,0 +1,40 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env
+.env.*
+
+# VS Code or JetBrains IDEs
+.vscode/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Lock files
+*.lock
+
+# Pytest / coverage / logs
+*.log
+.coverage
+htmlcov/
+*.cover
+
+# FileLock generated files (used for concurrency)
+*.json.lock
+
+# Compiled files or cache
+*.egg-info/
+build/
+dist/
+
+# Personal debug files or backups
+*.bak
+*.tmp
+txt.txt
