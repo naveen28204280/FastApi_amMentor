@@ -1,0 +1,15 @@
+[
+    {
+      "mentor_email": "gani@example.com",
+      "mentees": [
+        "teja@example.com",
+        "aarti@example.com"
+      ]
+    },
+    {
+      "mentor_email": "xyz@example.com",
+      "mentees": [
+        "ram@example.com"
+      ]
+    }
+  ]
