@@ -1,0 +1,12 @@
+[
+    {
+      "id": "dsa",
+      "name": "Data Structures & Algorithms",
+      "description": "Master the core concepts of DSA for interviews."
+    },
+    {
+      "id": "flutter",
+      "name": "Flutter Development",
+      "description": "Build cross-platform mobile apps using Flutter."
+    }
+  ]
