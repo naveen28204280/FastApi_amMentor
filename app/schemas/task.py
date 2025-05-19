@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 class TaskBase(BaseModel):
     track_id: int
@@ -7,6 +8,7 @@ class TaskBase(BaseModel):
     title: str
     description: Optional[str] = None
     points: int = 10
+    deadline: Optional[datetime] = None 
 
 class TaskCreate(TaskBase):
     pass
