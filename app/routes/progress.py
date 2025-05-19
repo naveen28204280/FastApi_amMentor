@@ -7,9 +7,11 @@ from filelock import FileLock
 
 router = APIRouter()
 
-USERS_FILE = Path(__file__).parent.parent / "static" / "users.json"
-PROGRESS_FILE = Path(__file__).parent.parent / "static" / "progress.json"
+STORAGE_PATH = Path("/mnt/storage")
+
+PROGRESS_FILE = STORAGE_PATH / "progress.json"
 LOCK_FILE = PROGRESS_FILE.with_suffix(".lock")
+USERS_FILE = Path(__file__).parent.parent / "static" / "users.json"
 MENTORSHIP_FILE = Path(__file__).parent.parent / "static" / "mentorship.json"
 
 

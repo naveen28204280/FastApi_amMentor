@@ -5,7 +5,8 @@ from collections import defaultdict
 
 router = APIRouter()
 
-PROGRESS_FILE = Path(__file__).parent.parent / "static" / "progress.json"
+STORAGE_PATH = Path("/mnt/storage")
+PROGRESS_FILE = STORAGE_PATH / "progress.json"
 TASKS_FOLDER = Path(__file__).parent.parent / "static" / "tasks"
 
 @router.get("/leaderboard/{track_id}")
