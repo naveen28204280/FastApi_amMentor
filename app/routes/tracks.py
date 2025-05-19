@@ -1,23 +1,20 @@
-from fastapi import APIRouter, HTTPException
-import json
-from pathlib import Path
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.db import models
+from app.db.db import get_db
+from app.schemas.track import TrackOut
+from app.schemas.task import TaskOut
 
 router = APIRouter()
 
-BASE_PATH = Path(__file__).parent.parent / "static"
-TRACKS_FILE = BASE_PATH / "tracks.json"
-TASKS_FOLDER = BASE_PATH / "tasks"
+@router.get("/", response_model=list[TrackOut])
+def list_tracks(db: Session = Depends(get_db)):
+    return db.query(models.Track).all()
 
-@router.get("/tracks")
-def get_tracks():
-    with open(TRACKS_FILE, "r") as f:
-        return json.load(f)
-
-@router.get("/track/{track_id}/tasks")
-def get_tasks_for_track(track_id: str):
-    task_file = TASKS_FOLDER / f"{track_id}.json"
-    if not task_file.exists():
+@router.get("/{track_id}/tasks", response_model=list[TaskOut])
+def list_tasks_for_track(track_id: int, db: Session = Depends(get_db)):
+    track = db.query(models.Track).filter_by(id=track_id).first()
+    if not track:
         raise HTTPException(status_code=404, detail="Track not found")
-    
-    with open(task_file, "r") as f:
-        return json.load(f)
+
+    return db.query(models.Task).filter_by(track_id=track_id).order_by(models.Task.task_no).all()

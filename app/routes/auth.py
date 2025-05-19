@@ -1,27 +1,30 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-import json
-from pathlib import Path
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.db import models, crud
+from app.db.db import get_db
+from app.schemas.user import UserCreate, UserOut
 
 router = APIRouter()
 
-STATIC_PATH = Path(__file__).parent.parent / "static" / "users.json"
+@router.post("/register", response_model=UserOut)
+def register_user(user: UserCreate, db: Session = Depends(get_db)):
+    existing = crud.get_user_by_email(db, user.email)
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
 
-class LoginRequest(BaseModel):
-    email: str
+    new_user = models.User(
+        email=user.email,
+        name=user.name,
+        role=user.role
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
 
-@router.post("/login")
-def login_user(data: LoginRequest):
-    with open(STATIC_PATH, "r") as f:
-        users = json.load(f)
-    
-    user = next((u for u in users if u["email"].lower() == data.email.lower()), None)
-    
+@router.get("/user/{email}", response_model=UserOut)
+def get_user(email: str, db: Session = Depends(get_db)):
+    user = crud.get_user_by_email(db, email)
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid email")
-
-    return {
-        "message": f"Login successful for {user['name']}",
-        "role": user["role"],
-        "user": user
-    }
+        raise HTTPException(status_code=404, detail="User not found")
+    return user

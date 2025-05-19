@@ -1,28 +1,25 @@
-from fastapi import APIRouter, HTTPException
-from pathlib import Path
-import json
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.db import models
+from app.db.db import get_db
 
 router = APIRouter()
 
-MENTORSHIP_FILE = Path(__file__).parent.parent / "static" / "mentorship.json"
+@router.get("/{mentor_email}/mentees")
+def get_mentees_for_mentor(mentor_email: str, db: Session = Depends(get_db)):
+    mentor = db.query(models.User).filter_by(email=mentor_email, role="mentor").first()
+    if not mentor:
+        raise HTTPException(status_code=404, detail="Mentor not found")
 
-@router.get("/mentees/{mentor_email}")
-def get_mentees_for_mentor(mentor_email: str):
-    if not MENTORSHIP_FILE.exists():
-        raise HTTPException(status_code=404, detail="Mapping not found")
+    mapping = db.query(models.MentorMenteeMap).filter_by(mentor_id=mentor.id).all()
+    mentee_ids = [m.mentee_id for m in mapping]
 
-    try:
-        with open(MENTORSHIP_FILE, "r") as f:
-            mentorship = json.load(f)
-    except json.JSONDecodeError:
-        raise HTTPException(status_code=500, detail="Malformed mentorship.json")
+    if not mentee_ids:
+        return {"mentor_email": mentor_email, "mentees": []}
 
-    mentor_entry = next((m for m in mentorship if m["mentor_email"] == mentor_email), None)
-
-    if not mentor_entry:
-        raise HTTPException(status_code=404, detail="Mentor not mapped to any mentees")
+    mentees = db.query(models.User).filter(models.User.id.in_(mentee_ids)).all()
 
     return {
-        "mentor_email": mentor_email,
-        "mentees": mentor_entry["mentees"]
+        "mentor_email": mentor.email,
+        "mentees": [{"name": m.name, "email": m.email} for m in mentees]
     }
