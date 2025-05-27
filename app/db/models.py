@@ -24,7 +24,7 @@ class Task(Base):
     title = Column(String, nullable=False)
     description = Column(Text)
     points = Column(Integer, default=10)
-    deadline = Column(DateTime, nullable=True)
+    deadline_days = Column(Integer, nullable=True)
 
     __table_args__ = (UniqueConstraint("track_id", "task_no", name="unique_track_task"),)
 
