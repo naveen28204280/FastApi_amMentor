@@ -61,3 +61,9 @@ class LeaderboardEntry(Base):
     mentee_id = Column(Integer, ForeignKey("users.id"))
     total_points = Column(Integer, default=0)
     tasks_completed = Column(Integer, default=0)
+class OTP(Base):
+    __tablename__ = "otp"
+
+    email = Column(String, primary_key=True, index=True)
+    otp = Column(String, nullable=False)
+    expires_at = Column(DateTime, nullable=False)
