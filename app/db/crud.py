@@ -58,3 +58,15 @@ def get_leaderboard_data(db: Session, track_id: int):
         .order_by(func.sum(models.Task.points).desc())
         .all()
     )
+def get_otp_by_email(db, email):
+    return db.query(models.OTP).filter(models.OTP.email == email).first()
+
+def create_or_update_otp(db, email, otp, expires_at):
+    entry = get_otp_by_email(db, email)
+    if entry:
+        entry.otp = otp
+        entry.expires_at = expires_at
+    else:
+        entry = models.OTP(email=email, otp=otp, expires_at=expires_at)
+        db.add(entry)
+    db.commit()
