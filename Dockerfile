@@ -6,4 +6,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+COPY wait-for-postgres.sh /app/wait-for-postgres.sh
+RUN chmod +x /app/wait-for-postgres.sh
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
