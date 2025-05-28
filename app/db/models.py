@@ -42,7 +42,6 @@ class Submission(Base):
     submitted_at = Column(DateTime, default=datetime.utcnow)
     approved_at = Column(DateTime, nullable=True)
     mentor_feedback = Column(Text, nullable=True)
-
     mentee = relationship("User")
     task = relationship("Task")
 
