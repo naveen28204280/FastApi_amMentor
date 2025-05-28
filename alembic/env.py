@@ -11,9 +11,12 @@ config = context.config
 DATABASE_URL = os.getenv("DATABASE_URL")
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
-from app.db import Base
-from app.models import * 
-target_metadata = Base.metadata
+from app.db.db import Base
+import app.db.models
+
+target_metadata = [Base.metadata]
+fileConfig(config.config_file_name)
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
