@@ -15,7 +15,6 @@ class Track(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, unique=True, nullable=False)
     description = Column(Text)
-    testing = Column(Text)
 
 class Task(Base):
     __tablename__ = "tasks"
