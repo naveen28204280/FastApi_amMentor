@@ -37,13 +37,12 @@ def approve_task(data: SubmissionApproval, db: Session = Depends(get_db)):
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found")
     task = db.query(models.Tasks).filter_by(id=sub.task_id).first()
-    mentee = db.query(models.User).filter_by(mentee_id=sub.mentee_id)
-    
+    points_storage = db.query(models.LeaderboardEntry).filter_by(track_id=sub.track_id, mentee_id=sub.mentee_id)
     # 3. Check if late and add points
     if sub.total_paused_time > task.deadline_days:
-        mentee.points += task.points/2 # Where are we storing points ???!!!!
+        points_storage.total_points += task.points/2
     else:
-        mentee.poins += task.points
+        points_storage.total_points += task.points
     # 3. Confirm mentor is assigned to this mentee
     if not crud.is_mentor_of(db, mentor.id, sub.mentee_id):
         raise HTTPException(status_code=403, detail="Mentor not authorized for this mentee")

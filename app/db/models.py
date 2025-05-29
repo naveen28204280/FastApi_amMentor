@@ -66,7 +66,7 @@ class LeaderboardEntry(Base):
     tasks_completed = Column(Integer, default=0)
 class OTP(Base):
     __tablename__ = "otp"
-
+    
     email = Column(String, primary_key=True, index=True)
     otp = Column(String, nullable=False)
     expires_at = Column(DateTime, nullable=False)
