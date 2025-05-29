@@ -101,3 +101,11 @@ def start_task(db: Session, task_id: int, mentee_id: int):
     db.commit()
     db.refresh(task_start)
     return task_start
+
+def find_time_spent_on_task(db: Session, submission: int):
+    submission = db.query(models.Submission).filter_by(id=submission).first()
+    if submission.submitted_at:
+        time_spent = datetime.combine(submission.submitted_at) - datetime.combine(submission.start_date) - submission.total_paused_time
+    else:
+        time_spent = datetime.combine(datetime.now()) - datetime.combine(submission.start_date) - submission.total_paused_time
+    return time_spent
