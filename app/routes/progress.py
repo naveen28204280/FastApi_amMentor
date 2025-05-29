@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.db import crud, models
 from app.db.db import get_db
-from app.schemas.submission import SubmissionCreate, SubmissionOut, SubmissionApproval, PauseTask, TasksList
+from app.schemas.submission import SubmissionCreate, SubmissionOut, SubmissionApproval, PauseTask, StartTask
 
 router = APIRouter()
 
@@ -65,8 +65,8 @@ def pause_task(data: PauseTask, db: Session = Depends(get_db)):
 
 @router.post("/pause-end", response_model=PauseTask)
 def end_pause(data: PauseTask, db: Session = Depends(get_db)):
-    mentor = crud.get_user_by_email()
-    mentee = crud.get_user_by_email()
+    mentor = crud.get_user_by_email(db, data.mentor_email)
+    mentee = crud.get_user_by_email(db, data.mentee_email)
     if not crud.is_mentor_of(db, mentor.id, mentee.id):
         return HTTPException(status_code=403, detail="Mentor not authorized for this mentee")
     task = crud.get_task(db, task_id=data.task_id)
@@ -75,3 +75,13 @@ def end_pause(data: PauseTask, db: Session = Depends(get_db)):
         return HTTPException(status_code=400, detail="This task is already paused")
     paused = crud.end_pause(mentee_task_submission.id)
     return paused
+
+@router.post("/{track_id}/{task_id}/start-task", response_model=StartTask)
+def start_task(data: StartTask, db: Session = Depends(get_db)):
+    mentee = crud.get_user_by_email()
+    task = crud.get_task(db, task_id=data.task_id)
+    existing = db.query(models.Submission).filter_by(mentee_id=mentee.id, task_id=task.id).first()
+    if existing:
+        return HTTPException(status_code=403, detail="Already Started")
+    start = crud.start_task(task_id=task.id, mentee_id=mentee.id)
+    return start

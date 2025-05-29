@@ -9,18 +9,10 @@ def get_task(db: Session, track_id: int, task_no: int):
     return db.query(models.Task).filter_by(track_id=track_id, task_no=task_no).first()
 
 def submit_task(db: Session, mentee_id: int, task_id: int, reference_link: str):
-    existing = db.query(models.Submission).filter_by(mentee_id=mentee_id, task_id=task_id).first()
-    if existing:
-        return None  # Already submitted
-
-    submission = models.Submission(
-        mentee_id=mentee_id,
-        task_id=task_id,
-        reference_link=reference_link,
-        submitted_at=datetime.utcnow(),
-        status="submitted"
-    )
-    db.add(submission)
+    submission = db.query(models.Submission).filter_by(mentee_id=mentee_id, task_id=task_id).first()
+    submission.status = "Submitted"
+    submission.submitted_at = datetime.now()
+    submission.reference_link = reference_link
     db.commit()
     db.refresh(submission)
     return submission
@@ -84,3 +76,28 @@ def end_pause(db: Session, submission: int):
     db.commit()
     db.refresh()
     return pause_row
+
+def get_otp_by_email(db, email):
+    return db.query(models.OTP).filter(models.OTP.email == email).first()
+
+def create_or_update_otp(db, email, otp, expires_at):
+    entry = get_otp_by_email(db, email)
+    if entry:
+        entry.otp = otp
+        entry.expires_at = expires_at
+    else:
+        entry = models.OTP(email=email, otp=otp, expires_at=expires_at)
+        db.add(entry)
+    db.commit()
+
+def start_task(db: Session, task_id: int, mentee_id: int):
+    task_start = models.Submission(
+        mentee = mentee_id,
+        task = task_id,
+        start_date = datetime.now(),
+        status = "started"
+    )
+    db.add(task_start)
+    db.commit()
+    db.refresh(task_start)
+    return task_start
