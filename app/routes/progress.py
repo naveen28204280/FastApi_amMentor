@@ -19,7 +19,7 @@ def submit_task(data: SubmissionCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Task not found")
 
     # 3. Submit
-    submission = crud.submit_task(db, mentee_id=mentee.id, task_id=task.id, reference_link=data.reference_link)
+    submission = crud.submit_task(db, mentee_id=mentee.id, task_id=task.id, reference_link=data.reference_link, status = "submitted")
     if not submission:
         raise HTTPException(status_code=400, detail="Task already submitted")
 
@@ -36,7 +36,14 @@ def approve_task(data: SubmissionApproval, db: Session = Depends(get_db)):
     sub = db.query(models.Submission).filter_by(id=data.submission_id).first()
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found")
-
+    task = db.query(models.Tasks).filter_by(id=sub.task_id).first()
+    mentee = db.query(models.User).filter_by(mentee_id=sub.mentee_id)
+    
+    # 3. Check if late and add points
+    if sub.total_paused_time > task.deadline_days:
+        mentee.points += task.points/2 # Where are we storing points ???!!!!
+    else:
+        mentee.poins += task.points
     # 3. Confirm mentor is assigned to this mentee
     if not crud.is_mentor_of(db, mentor.id, sub.mentee_id):
         raise HTTPException(status_code=403, detail="Mentor not authorized for this mentee")
@@ -46,7 +53,7 @@ def approve_task(data: SubmissionApproval, db: Session = Depends(get_db)):
         db,
         submission_id=sub.id,
         mentor_feedback=data.mentor_feedback,
-        status=data.status
+        status=data.status # approved, ongoing
     )
     return updated
 
@@ -76,11 +83,11 @@ def end_pause(data: PauseTask, db: Session = Depends(get_db)):
     paused = crud.end_pause(mentee_task_submission.id)
     return paused
 
-@router.post("/{track_id}/{task_id}/start-task", response_model=StartTask)
+@router.post("/start-task", response_model=StartTask)
 def start_task(data: StartTask, db: Session = Depends(get_db)):
-    mentee = crud.get_user_by_email()
-    task = crud.get_task(db, task_id=data.task_id)
-    existing = db.query(models.Submission).filter_by(mentee_id=mentee.id, task_id=task.id).first()
+    mentee = crud.get_user_by_email(email=data.mentee_email)
+    task = crud.get_task(db, track_id=data.track_id, task_no=data.task_no)
+    existing = crud.get_submission(db, mentee.email, task.track_id, task.task_no)
     if existing:
         return HTTPException(status_code=403, detail="Already Started")
     start = crud.start_task(task_id=task.id, mentee_id=mentee.id)

@@ -42,4 +42,5 @@ class TasksList(BaseModel):
 
 class StartTask(BaseModel):
     mentee_email: int
-    task_id: int
+    task_no: int
+    track_id: int

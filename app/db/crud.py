@@ -66,6 +66,7 @@ def create_or_update_otp(db, email, otp, expires_at):
 def pause_task(db: Session, submission: int):
     pause_row=db.query(models.Submission).filter_by(id=submission).first()
     pause_row.pause=datetime.now()
+    pause_row.status = "paused"
     db.commit()
     db.refresh()
     return pause_row
@@ -73,6 +74,7 @@ def pause_task(db: Session, submission: int):
 def end_pause(db: Session, submission: int):
     pause_row=db.query(models.Submission).filter_by(id=submission).first()
     pause_row.total_paused_time+= datetime.combine(date.today(), datetime.now()) - datetime.combine(date.today(), pause_row.pause_start)
+    pause_row.status = "ongoing"
     db.commit()
     db.refresh()
     return pause_row
@@ -95,7 +97,7 @@ def start_task(db: Session, task_id: int, mentee_id: int):
         mentee = mentee_id,
         task = task_id,
         start_date = datetime.now(),
-        status = "started"
+        status = "ongoing"
     )
     db.add(task_start)
     db.commit()
@@ -105,7 +107,11 @@ def start_task(db: Session, task_id: int, mentee_id: int):
 def find_time_spent_on_task(db: Session, submission: int):
     submission = db.query(models.Submission).filter_by(id=submission).first()
     if submission.submitted_at:
-        time_spent = datetime.combine(submission.submitted_at) - datetime.combine(submission.start_date) - submission.total_paused_time
+        time_spent = (submission.submitted_at - submission.start_date - submission.total_paused_time).days
     else:
-        time_spent = datetime.combine(datetime.now()) - datetime.combine(submission.start_date) - submission.total_paused_time
+        time_spent = (datetime.now() - submission.start_date - submission.total_paused_time).days
     return time_spent
+
+def get_submission(db: Session, mentee_email: str, track_id: int, task_no: int):
+    mentee = get_user_by_email(mentee_email)
+    return db.query(models.Submission).filter_by(mentee_email=mentee.id, track_id=track_id, task_no=task_no)
