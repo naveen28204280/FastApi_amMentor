@@ -7,7 +7,6 @@ __pycache__/
 # Virtual environment
 venv/
 .env
-.env.*
 
 # VS Code or JetBrains IDEs
 .vscode/
