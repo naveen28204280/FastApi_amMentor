@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from app.db import models
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
@@ -94,8 +94,8 @@ def create_or_update_otp(db, email, otp, expires_at):
 
 def start_task(db: Session, task_id: int, mentee_id: int):
     task_start = models.Submission(
-        mentee = mentee_id,
-        task = task_id,
+        mentee_id = mentee_id,
+        task_id = task_id,
         start_date = datetime.now(),
         status = "ongoing"
     )
@@ -107,9 +107,9 @@ def start_task(db: Session, task_id: int, mentee_id: int):
 def find_time_spent_on_task(db: Session, submission: int):
     submission = db.query(models.Submission).filter_by(id=submission).first()
     if submission.submitted_at:
-        time_spent = (submission.submitted_at - submission.start_date - submission.total_paused_time).days
+        time_spent = (submission.submitted_at - submission.start_date - timedelta(submission.total_paused_time)).days
     else:
-        time_spent = (datetime.now() - submission.start_date - submission.total_paused_time).days
+        time_spent = (datetime.now() - submission.start_date - timedelta(submission.total_paused_time)).days
     return time_spent
 
 def get_submission(db: Session, mentee_email: str, track_id: int, task_no: int):

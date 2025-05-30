@@ -37,12 +37,15 @@ def approve_task(data: SubmissionApproval, db: Session = Depends(get_db)):
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found")
     task = db.query(models.Tasks).filter_by(id=sub.task_id).first()
-    points_storage = db.query(models.LeaderboardEntry).filter_by(track_id=sub.track_id, mentee_id=sub.mentee_id)
+    points_storage = db.query(models.LeaderboardEntry).filter_by(track_id=sub.track_id, mentee_id=sub.mentee_id).first()
+
     # 3. Check if late and add points
     if sub.total_paused_time > task.deadline_days:
         points_storage.total_points += task.points/2
     else:
         points_storage.total_points += task.points
+    db.commit()
+
     # 3. Confirm mentor is assigned to this mentee
     if not crud.is_mentor_of(db, mentor.id, sub.mentee_id):
         raise HTTPException(status_code=403, detail="Mentor not authorized for this mentee")
@@ -62,9 +65,9 @@ def pause_task(data: PauseTask, db: Session = Depends(get_db)):
     mentee = crud.get_user_by_email(db, email=data.mentee_email)
     if not crud.is_mentor_of(db, mentor.id, mentee.id):
         raise HTTPException(status_code=403, detail="Mentor not authorized for this mentee")
-    task = crud.get_task(db, task_id=data.task_id)
+    task = crud.get_task(db, task_no=data.task_no, track_id=data.track_id)
     mentee_task_submission = db.query(models.Submission).filter_by(mentee_id=mentee, task=task).first()
-    if mentee_task_submission.pause_start():
+    if mentee_task_submission.pause_start:
         return HTTPException(status_code=400, detail="This task is already paused")
     paused = crud.pause_task(mentee_task_submission.id)
     return paused
@@ -76,8 +79,8 @@ def end_pause(data: PauseTask, db: Session = Depends(get_db)):
     if not crud.is_mentor_of(db, mentor.id, mentee.id):
         return HTTPException(status_code=403, detail="Mentor not authorized for this mentee")
     task = crud.get_task(db, task_id=data.task_id)
-    mentee_task_submission = db.query(models.Submission).filter_by(mentee_id=mentee, task=task).first()
-    if mentee_task_submission.pause_start():
+    mentee_task_submission = db.query(models.Submission).filter_by(mentee_id=mentee, task_id=task).first()
+    if mentee_task_submission.pause_start:
         return HTTPException(status_code=400, detail="This task is already paused")
     paused = crud.end_pause(mentee_task_submission.id)
     return paused
