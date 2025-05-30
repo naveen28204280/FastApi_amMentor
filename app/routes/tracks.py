@@ -12,7 +12,7 @@ router = APIRouter()
 def list_tracks(db: Session = Depends(get_db)):
     return db.query(models.Track).all()
 
-@router.get("/mentee/tasks", response_model=list[TaskOut])
+@router.get("/{track_id}/tasks", response_model=list[TaskOut])
 def mentee_specific_status(track_id: int, mentee_email: str, db: Session = Depends(get_db)):
     tasks = db.query(models.Task).filter_by(track_id=track_id).order_by(models.Task.task_no).all()
     mentee = crud.get_user_by_email(db, mentee_email)
