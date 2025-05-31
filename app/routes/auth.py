@@ -32,7 +32,7 @@ def send_otp(email: str, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    otp_code = ''.join(random.choices(string.digits, k=6))
+    otp_code = ''.join(random.choices(string.digits, k=4))
     expiry = datetime.utcnow() + timedelta(minutes=5)
 
     crud.create_or_update_otp(db, email, otp_code, expiry)
