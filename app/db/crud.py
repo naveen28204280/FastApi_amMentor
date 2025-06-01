@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.db import models
 from datetime import datetime
@@ -70,3 +71,14 @@ def create_or_update_otp(db, email, otp, expires_at):
         entry = models.OTP(email=email, otp=otp, expires_at=expires_at)
         db.add(entry)
     db.commit()
+
+
+def get_submissions(db: Session, email: str, track_id: Optional[int] = None):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        return []
+    query = db.query(models.Submission).filter(models.Submission.mentee_id == user.id)
+    if track_id is not None:
+        query = query.join(models.Task, models.Submission.task_id == models.Task.id)
+        query = query.filter(models.Task.track_id == track_id)
+    return query.all()
