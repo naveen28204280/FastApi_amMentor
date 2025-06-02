@@ -1,3 +1,4 @@
+from typing import Optional
 from sqlalchemy.orm import Session
 from app.db import models
 from datetime import datetime, date, timedelta
@@ -68,7 +69,7 @@ def pause_task(db: Session, submission: int):
     pause_row.pause=datetime.now()
     pause_row.status = "paused"
     db.commit()
-    db.refresh()
+    db.refresh(pause_row)
     return pause_row
 
 def end_pause(db: Session, submission: int):
@@ -76,21 +77,8 @@ def end_pause(db: Session, submission: int):
     pause_row.total_paused_time+= datetime.combine(date.today(), datetime.now()) - datetime.combine(date.today(), pause_row.pause_start)
     pause_row.status = "ongoing"
     db.commit()
-    db.refresh()
+    db.refresh(pause_row)
     return pause_row
-
-def get_otp_by_email(db, email):
-    return db.query(models.OTP).filter(models.OTP.email == email).first()
-
-def create_or_update_otp(db, email, otp, expires_at):
-    entry = get_otp_by_email(db, email)
-    if entry:
-        entry.otp = otp
-        entry.expires_at = expires_at
-    else:
-        entry = models.OTP(email=email, otp=otp, expires_at=expires_at)
-        db.add(entry)
-    db.commit()
 
 def start_task(db: Session, task_id: int, mentee_id: int):
     task_start = models.Submission(
@@ -113,5 +101,15 @@ def find_time_spent_on_task(db: Session, submission: int):
     return time_spent
 
 def get_submission(db: Session, mentee_email: str, track_id: int, task_no: int):
-    mentee = get_user_by_email(mentee_email)
+    mentee = get_user_by_email(db, mentee_email)
     return db.query(models.Submission).filter_by(mentee_email=mentee.id, track_id=track_id, task_no=task_no)
+
+def get_submissions(db: Session, email: str, track_id: Optional[int] = None):
+    user = db.query(models.User).filter(models.User.email == email).first()
+    if not user:
+        return []
+    query = db.query(models.Submission).filter(models.Submission.mentee_id == user.id)
+    if track_id is not None:
+        query = query.join(models.Task, models.Submission.task_id == models.Task.id)
+        query = query.filter(models.Task.track_id == track_id)
+    return query.all()
