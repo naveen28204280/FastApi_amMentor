@@ -25,6 +25,7 @@ def mentee_specific_status(track_id: int, mentee_email: str, db: Session = Depen
         else:
             status = "Not started"
             time_spent = 0
+        progress_bar = (time_spent/task.deadline_days) * 100
         tasks_with_status.append(
             {
             "task_no": task.task_no,
@@ -32,7 +33,7 @@ def mentee_specific_status(track_id: int, mentee_email: str, db: Session = Depen
             "points": task.points,
             "deadline": task.deadline_days,
             "status": status,
-            "time_spent": time_spent,
+            "progress_bar": progress_bar,
             "description": task.description,
             "track": task.track.title
             }
