@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from datetime import datetime
+from datetime import date,datetime
 
 class SubmissionBase(BaseModel):
     track_id: int
@@ -9,6 +9,7 @@ class SubmissionBase(BaseModel):
 
 class SubmissionCreate(SubmissionBase):
     mentee_email: str
+    start_date:date
 
 class SubmissionOut(BaseModel):
     id: int 
@@ -16,8 +17,8 @@ class SubmissionOut(BaseModel):
     task_id: int
     reference_link: str
     status: str
-    submitted_at: datetime
-    approved_at: Optional[datetime] = None
+    submitted_at: date
+    approved_at: Optional[date] = None
     mentor_feedback: Optional[str] = None
 
     class Config:

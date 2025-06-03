@@ -36,8 +36,9 @@ class Submission(Base):
     id = Column(Integer, primary_key=True, index=True)
     mentee_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     task_id = Column(Integer, ForeignKey("tasks.id"), nullable=False)
+
     reference_link = Column(Text, nullable=True)
-    status = Column(String, default="ongoing")  # submitted / approved / paused  / ongoing
+    status = Column(String, default="ongoing")  # submitted / approved / paused  / ongoing / not started
     start_date = Column(String, nullable=False)
     submitted_at = Column(DateTime, nullable=True)
     approved_at = Column(DateTime, nullable=True)
