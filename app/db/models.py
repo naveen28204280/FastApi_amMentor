@@ -40,6 +40,7 @@ class Submission(Base):
     reference_link = Column(Text, nullable=False)
     status = Column(String, default="submitted")  # submitted / approved / paused / rejected
     submitted_at = Column(DateTime, default=datetime.utcnow)
+    start_date = Column(DateTime, nullable=False)
     approved_at = Column(DateTime, nullable=True)
     mentor_feedback = Column(Text, nullable=True)
     mentee = relationship("User")
