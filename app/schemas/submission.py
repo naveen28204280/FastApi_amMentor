@@ -6,10 +6,10 @@ class SubmissionBase(BaseModel):
     track_id: int
     task_no: int
     reference_link: str
-
+    start_date:date
 class SubmissionCreate(SubmissionBase):
     mentee_email: str
-    start_date:date
+
 
 class SubmissionOut(BaseModel):
     id: int
