@@ -66,7 +66,7 @@ def create_or_update_otp(db, email, otp, expires_at):
 
 def pause_task(db: Session, submission: int):
     pause_row=db.query(models.Submission).filter_by(id=submission).first()
-    pause_row.pause=datetime.now()
+    pause_row.pause_start=datetime.now()
     pause_row.status = "paused"
     db.commit()
     db.refresh(pause_row)
@@ -74,8 +74,9 @@ def pause_task(db: Session, submission: int):
 
 def end_pause(db: Session, submission: int):
     pause_row=db.query(models.Submission).filter_by(id=submission).first()
-    pause_row.total_paused_time+= datetime.combine(date.today(), datetime.now()) - datetime.combine(date.today(), pause_row.pause_start)
+    pause_row.total_paused_time+= (datetime.now().date() - pause_row.pause_start.date()).days
     pause_row.status = "ongoing"
+    pause_row.pause_start = None
     db.commit()
     db.refresh(pause_row)
     return pause_row
@@ -92,17 +93,17 @@ def start_task(db: Session, task_id: int, mentee_id: int):
     db.refresh(task_start)
     return task_start
 
-def find_time_spent_on_task(db: Session, submission: int):
-    submission = db.query(models.Submission).filter_by(id=submission).first()
-    if submission.submitted_at:
-        time_spent = (submission.submitted_at - submission.start_date - timedelta(submission.total_paused_time)).days
-    else:
-        time_spent = (datetime.now() - submission.start_date - timedelta(submission.total_paused_time)).days
+def find_time_spent_on_task(db: Session, submission_id: int):
+    submission = db.query(models.Submission).filter_by(id=submission_id).first()
+    start = datetime.fromisoformat(submission.start_date) if isinstance(submission.start_date, str) else submission.start_date
+    end = submission.submitted_at or datetime.now()
+    time_spent = (end - start - timedelta(days=submission.total_paused_time)).days
     return time_spent
 
 def get_submission(db: Session, mentee_email: str, track_id: int, task_no: int):
-    mentee = get_user_by_email(db, mentee_email)
-    return db.query(models.Submission).filter_by(mentee_email=mentee.id, track_id=track_id, task_no=task_no)
+    mentee = get_user_by_email(db, email=mentee_email)
+    task = get_task(db, track_id=track_id, task_no=task_no)
+    return db.query(models.Submission).filter_by(mentee_id=mentee.id, task_id=task.id).first()
 
 def get_submissions(db: Session, email: str, track_id: Optional[int] = None):
     user = db.query(models.User).filter(models.User.email == email).first()
@@ -113,3 +114,4 @@ def get_submissions(db: Session, email: str, track_id: Optional[int] = None):
         query = query.join(models.Task, models.Submission.task_id == models.Task.id)
         query = query.filter(models.Task.track_id == track_id)
     return query.all()
+    
