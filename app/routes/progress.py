@@ -28,7 +28,7 @@ def submit_task(data: SubmissionCreate, db: Session = Depends(get_db)):
 
     return submission
 
-@router.patch("/approve-task", response_model=SubmissionOut) 
+@router.patch("/review-task", response_model=SubmissionOut) 
 def approve_task(data: SubmissionApproval, db: Session = Depends(get_db)):
     # 1. Validate mentor
     mentor = crud.get_user_by_email(db, email=data.mentor_email)
@@ -40,27 +40,34 @@ def approve_task(data: SubmissionApproval, db: Session = Depends(get_db)):
     if not sub:
         raise HTTPException(status_code=404, detail="Submission not found")
     task = db.query(models.Tasks).filter_by(id=sub.task_id).first()
-    points_storage = db.query(models.LeaderboardEntry).filter_by(track_id=sub.track_id, mentee_id=sub.mentee_id).first()
-
-    # 3. Check if late and add points
-    if sub.total_paused_time > task.deadline_days:
-        points_storage.total_points += task.points/2
-    else:
-        points_storage.total_points += task.points
-    db.commit()
 
     # 3. Confirm mentor is assigned to this mentee
     if not crud.is_mentor_of(db, mentor.id, sub.mentee_id):
         raise HTTPException(status_code=403, detail="Mentor not authorized for this mentee")
-
-    # 4. Approve or pause
-    updated = crud.approve_submission(
-        db,
-        submission_id=sub.id,
-        mentor_feedback=data.mentor_feedback,
-        status=data.status # approved, ongoing
-    )
-    return updated
+    
+    # 4. See if accepted or rejected
+    if data.accepted:
+        if data.points_awarded > task.points:
+            raise HTTPException(status_code=422, detail='Awarded points exceed maximum points of the task')
+        else:
+            crud.approve_submission(
+            db,
+            submission_id=sub.id,
+            mentor_feedback=data.mentor_feedback,
+            points_awarded=data.points_awarded
+            )
+    else:
+        crud.reject_submission(
+            db,
+            submission_id=sub.id,
+            mentor_feedback=data.mentor_feedback,
+            )
+    return SubmissionOut(mentee_id=sub.mentee_id,
+        task_id=sub.task_id, 
+        reference_link=sub.reference_link or None,
+        status=sub.status,
+        submitted_at=sub.submitted_at or None
+        )
 
 @router.post("/pause-task", response_model=PauseTask)
 def pause_task(data: PauseTask, db: Session = Depends(get_db)):

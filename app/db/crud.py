@@ -31,15 +31,16 @@ def submit_task(db: Session, mentee_id: int, task_id: int, reference_link: str,s
     db.refresh(submission)
     return submission
 
-def approve_submission(db: Session, submission_id: int, mentor_feedback: str, status: str):
+def approve_submission(db: Session, submission_id: int, mentor_feedback: str, points_awarded: int):
     sub = db.query(models.Submission).filter_by(id=submission_id).first()
     if not sub:
         return None
 
-    sub.status = status
     sub.mentor_feedback = mentor_feedback
-    if status == "approved":
-        sub.approved_at = datetime.now()
+    sub.approved_at = datetime.now()
+    sub.points_awarded += points_awarded
+    sub.total_paused_time = (datetime.now() - sub.submitted_at).days
+    sub.status = "approved"
 
     db.commit()
     db.refresh(sub)
@@ -128,3 +129,18 @@ def get_submissions(db: Session, email: str, track_id: Optional[int] = None):
         query = query.filter(models.Task.track_id == track_id)
     return query.all()
     
+def reject_submission(db: Session, submission_id: int, mentor_feedback: str):
+    sub = db.query(models.Submission).filter_by(id=submission_id).first()
+    if not sub:
+        return None
+
+    sub.reference_link = None
+    sub.mentor_feedback = mentor_feedback
+    sub.total_paused_time = (datetime.now() - sub.submitted_at).days
+    sub.submitted_at = None
+    sub.status = "ongoing"
+    sub.start_date = None
+
+    db.commit()
+    db.refresh(sub)
+    return sub

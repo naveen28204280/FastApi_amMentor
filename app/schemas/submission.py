@@ -29,6 +29,8 @@ class SubmissionApproval(BaseModel):
     mentor_email: str
     status: str
     mentor_feedback: Optional[str] = None
+    accepted: bool
+    points_awarded: int
 
 class PauseTask(BaseModel):
     task_no: int
