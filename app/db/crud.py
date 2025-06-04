@@ -1,7 +1,8 @@
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.db import models
-from datetime import datetime
+from datetime import datetime, date
+from sqlalchemy import func
 
 def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
@@ -9,7 +10,7 @@ def get_user_by_email(db: Session, email: str):
 def get_task(db: Session, track_id: int, task_no: int):
     return db.query(models.Task).filter_by(track_id=track_id, task_no=task_no).first()
 
-def submit_task(db: Session, mentee_id: int, task_id: int, reference_link: str):
+def submit_task(db: Session, mentee_id: int, task_id: int, reference_link: str,start_date: date):
     existing = db.query(models.Submission).filter_by(mentee_id=mentee_id, task_id=task_id).first()
     if existing:
         return None  # Already submitted
@@ -18,8 +19,11 @@ def submit_task(db: Session, mentee_id: int, task_id: int, reference_link: str):
         mentee_id=mentee_id,
         task_id=task_id,
         reference_link=reference_link,
-        submitted_at=datetime.utcnow(),
-        status="submitted"
+        submitted_at=date,
+        status="submitted",
+        start_date=start_date,
+        
+
     )
     db.add(submission)
     db.commit()
@@ -44,7 +48,7 @@ def is_mentor_of(db: Session, mentor_id: int, mentee_id: int):
     return db.query(models.MentorMenteeMap).filter_by(mentor_id=mentor_id, mentee_id=mentee_id).first() is not None
 
 def get_leaderboard_data(db: Session, track_id: int):
-    from sqlalchemy import func
+
     return (
         db.query(
             models.User.name,
