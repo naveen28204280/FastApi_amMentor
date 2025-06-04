@@ -18,9 +18,10 @@ def submit_task(data: SubmissionCreate, db: Session = Depends(get_db)):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
 
-    # 3. Check if submission exists
-    sub = crud.get_submission(db,mentee_email=mentee.email, track_id=task.track_id, task_no=task.task_no)
-    if sub:
+
+    # 3. Submit
+    submission = crud.submit_task(db, mentee_id=mentee.id, task_id=task.id, reference_link=data.reference_link, start_date=data.start_date)
+    if not submission:
         raise HTTPException(status_code=400, detail="Task already submitted")
     # 4. Submit task
     submission = crud.submit_task(db, mentee_id=mentee.id, task_id=task.id, reference_link=data.reference_link, status = "submitted")
